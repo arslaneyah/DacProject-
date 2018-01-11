@@ -3,14 +3,14 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 public class TheadCreation extends Application implements Runnable{
-	ParkTest p;
+	Parking p;
 	
 	public static void main(String[] args) {
 		launch(args);
 	}
 	@Override
 	public void start(Stage window) throws Exception {
-	p = new ParkTest();
+	p = new Parking();
 	window.setTitle("parking");
       	window.setScene(p.scene);
       	window.setResizable(false);
