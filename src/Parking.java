@@ -18,16 +18,16 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
-public class Parking extends Application 
+public class Parking extends BorderPane 
 {
 	//Declaration
-	static BorderPane main;
-	static Path road;
-	static MoveTo moveTo;
-	static VBox box;
-	static int distance [] = {240, 400, 560, 720};
-	static boolean ishandicapped;
-	static String carType;
+	 BorderPane main;
+	 Path road;
+	 MoveTo moveTo;
+	 VBox box;
+	 int distance [] = {240, 400, 560, 720};
+	 boolean ishandicapped;
+	 String carType;
 	PathTransition pathTransition;
 	Button pause, play;
 	VBox buttons;
@@ -38,7 +38,7 @@ public class Parking extends Application
 	VLineTo vline1, vline2;
 	HLineTo hline1, hline2;
 	
-	static Group creatParking()
+	Group creatParking()
 	{
 		//container of the road and the car
 	    Group park = new Group();
@@ -47,7 +47,7 @@ public class Parking extends Application
 	    box.getChildren().add(park);
 	    box.setPrefHeight(570);
 	    //adding the parking to the interface
-	    main.setLeft(box);
+	    this.setLeft(box);
 	    //creating the starting point 
 	    moveTo = new MoveTo();
 	    //creating the road
@@ -96,7 +96,7 @@ public class Parking extends Application
 		//we need to move it to the left by the half of the value of the hline and vline 
 	    return p;
 	}
-	static ImageView creatCar(String type)
+	 ImageView creatCar(String type)
 	{
 		Random r;
 		ImageView car1;
@@ -126,17 +126,12 @@ public class Parking extends Application
 		parking.getChildren().addAll(road,car);
 		creatTransition(road, car);
 	}
-    public static void main(String[] args) 
-    {
-    	//starting the window
-       launch(args);
-    }
-    
-    public void start(Stage window) 
+	public ParkTest()
+    //public void start(Stage window) 
     {
     	//scene layout
     	main = new BorderPane();
-    	main.setStyle("-fx-background-image : url('pictures/background.jpg');");
+    	this.setStyle("-fx-background-image : url('pictures/background.jpg');");
     	// pause/play Buttons 
     	pause = new Button("Pause");
     	play 	= new Button("Play");
@@ -150,7 +145,7 @@ public class Parking extends Application
     	buttons.setPadding(new Insets(30,0,10,0));
     	buttons.getChildren().add(pause);
     	buttons.setStyle("-fx-background-color : #626262;");
-    	main.setBottom(buttons);
+    	this.setBottom(buttons);
     	if(new Random().nextInt(6) == 0)
     		carType = "handicapped";
     	else
@@ -196,12 +191,6 @@ public class Parking extends Application
     	});
       
     	// creating the scene 
-    	scene = new Scene(main, 990, 640);
-
-    	//creating the window
-    	window.setTitle("parking");
-      	window.setScene(scene);
-      	window.setResizable(false);
-      	window.show();
+    	scene = new Scene(this, 990, 640);
     }
 }
