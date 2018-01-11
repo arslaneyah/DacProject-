@@ -10,8 +10,8 @@ public class TheadCreation extends Application implements Runnable{
 	}
 	@Override
 	public void start(Stage window) throws Exception {
-		p = new ParkTest();
-		window.setTitle("parking");
+	p = new ParkTest();
+	window.setTitle("parking");
       	window.setScene(p.scene);
       	window.setResizable(false);
       	window.show();
