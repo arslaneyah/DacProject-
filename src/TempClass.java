@@ -18,6 +18,7 @@ import java.util.Random;
 import java.util.concurrent.Semaphore;
 import javafx.animation.PathTransition;
 import javafx.animation.PathTransition.OrientationType;
+import javafx.animation.SequentialTransition;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
@@ -25,7 +26,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
-public class Parking extends Application {
+public class TempClass extends Application {
 	// Declaration
 	BorderPane main;
 	Path[] road = new Path[100];
@@ -35,8 +36,8 @@ public class Parking extends Application {
 	int[][] placeOrdinaire = { { 240, 170, 0 }, { 400, 170, 0 }, { 560, 170, 0 }, { 700, 170, 0 }, { 240, -170, 0 },
 			{ 400, -170, 0 }, { 560, -170, 0 }, { 700, -170, 0 } };
 	int[][] placeHandicape = { { 80, 170, 0 }, { 80, -170, 0 } };
-	List<int[]> listePlaceHandicape = new ArrayList<int[]>();
-	List<int[]> listePlaceOrdinaire = new ArrayList<int[]>();
+	List <int[]> listePlaceHandicape = new ArrayList<int[]>();
+	List <int[]> listePlaceOrdinaire = new ArrayList<int[]>();
 	String carType;
 	PathTransition pathTransition;
 	Button pause, play;
@@ -46,44 +47,43 @@ public class Parking extends Application {
 	ImageView car;
 	VLineTo vline1, vline2;
 	HLineTo hline1, hline2;
-
-	Semaphore semEnter = new Semaphore(1, true);
-	Semaphore semExit = new Semaphore(1, true);
+	Semaphore mutexEnter = new Semaphore(1, true);
+	Semaphore mutexExit = new Semaphore(1, true);
 	Semaphore semParkH = new Semaphore(2, true);
 	Semaphore semParkN = new Semaphore(8, true);
+	SequentialTransition sequentialTransition = new SequentialTransition(); 
 
-	void sortieDirect(String type, int u) {
+	void sortieDirect(String type, int index)
+	{
 		// container of the road and the car
 		// creating the car
-		parking[u] = new Group();
+		parking[index] = new Group();
 		car = creatCar(type);
-
 		// road.getStyleClass().add("road");
-		moveTo = new MoveTo();
-
+		moveTo = new MoveTo(0,0);
 		// creating the road's lines
 		HLineTo hl = new HLineTo(1000);
 		// creating the road path
-		road[u] = new Path();
-		road[u].setStrokeWidth(200);
-		road[u].getElements().clear();
-		road[u].getElements().addAll(moveTo, hl);
-		parking[u].getChildren().clear();
-		parking[u].getChildren().addAll(road[u], car);
-		// parking [u].setTranslateX(-160);
-		roads.getChildren().add(parking[u]);
-		creatTransition(road[u], car, u);
+		road[index] = new Path();
+		road[index].setStrokeWidth(200);
+		road[index].getElements().clear();
+		road[index].getElements().addAll(moveTo, hl);
+		parking[index].getChildren().clear();
+		parking[index].getChildren().addAll(road[index], car);
+		// parking [index].setTranslateX(-160);
+		roads.getChildren().add(parking[index]);
+		creatTransition(road[index], car, index);
 	}
 
-	void creatTransition(Path p, ImageView c, int u) {
+	void creatTransition(Path p, ImageView car, int index) {
 		// hide the road stroke
-		road[u].setStyle("-fx-opacity : 0;");
+		road[index].setStyle("-fx-opacity : 0.5;");
 		// creating he transition ( animation )
 		pathTransition = new PathTransition();
 		// animation speed
 		pathTransition.setDuration(Duration.millis(10000));
 		// the moving element
-		pathTransition.setNode(c);
+		pathTransition.setNode(car);
 		// the path to move in
 		pathTransition.setPath(p);
 		// change the node orientation according to the path
@@ -92,28 +92,29 @@ public class Parking extends Application {
 		// pathTransition.setCycleCount(Timeline.INDEFINITE);
 		// start the animation
 		// if( buttons.getChildren().contains(pause))
-		pathTransition.play();
-
+		//pathTransition.play();
+		sequentialTransition.getChildren().add(pathTransition);
+		//sequentialTransition.play();
+		sequentialTransition.playFromStart();
+		System.out.println(pathTransition.getNode().getTranslateY());
 	}
 
-	Path setRoadElement(double h, double v, int o) {
-		// road.getStyleClass().add("road");
-		moveTo = new MoveTo();
-
+	Path creatRoad(double h, double v, int o) {
+		moveTo = new MoveTo(0, 0);
 		// creating the road's lines
 		HLineTo hl = new HLineTo(h);
 		VLineTo vl = new VLineTo(v);
 		// creating the road path
 		road[o] = new Path();
 		road[o].setStrokeWidth(200);
-		// road.getStyleClass().add("road");
 		road[o].getElements().clear();
 		road[o].getElements().addAll(moveTo, hl, vl);
 
 		return road[o];
 	}
 
-	static ImageView creatCar(String type) {
+	static ImageView creatCar(String type) 
+	{
 		Random r;
 		ImageView car1;
 		if (type.equals("normal")) {
@@ -128,16 +129,47 @@ public class Parking extends Application {
 		return car1;
 	}
 
-	void garer(String type, double x, double y, int u) {
+	void garer(String type, double x, double y, int index) {
+		// container of the road and the car
+		// creating the car
+		parking[index] = new Group();
+		car = creatCar(type);
+		// adding the element to the interface
+		road[index] = creatRoad(x, y, index);
+		parking[index].getChildren().clear();
+		parking[index].getChildren().addAll(road[index], car);
+		parking[index].setTranslateY(y / 2);
+		// 720 ok
+		if (x == 560) // ok
+			parking[index].setTranslateX(-80);
+		else if (x == 400) // ok
+			parking[index].setTranslateX(-160);
+		else if (x == 240) // ok
+			parking[index].setTranslateX(-240);
+		else if (x == 80) // ok
+			parking[index].setTranslateX(-320);
+		pane.getChildren().add(parking[index]);
+		creatTransition(road[index], car, index);
+	}
+	void sortie(String type, double x, double y, int u) {
 		// container of the road and the car
 		// creating the car
 		parking[u] = new Group();
-		car = creatCar(type);
 		// adding the element to the interface
-		road[u] = setRoadElement(x, y, u);
+		// road.getStyleClass().add("road");
+		// creating the road's lines
+		HLineTo hl = new HLineTo(x);
+		VLineTo vl = new VLineTo(y);
+		// creating the road path
+		road[u] = new Path();
+		road[u].setStrokeWidth(200);
+		// road.getStyleClass().add("road");
+		road[u].getElements().clear();
+		road[u].getElements().addAll(moveTo, vl, hl);
 		parking[u].getChildren().clear();
 		parking[u].getChildren().addAll(road[u], car);
 		parking[u].setTranslateY(y / 2);
+		
 		// 720 ok
 		if (x == 560) // ok
 			parking[u].setTranslateX(-80);
@@ -151,12 +183,14 @@ public class Parking extends Application {
 		creatTransition(road[u], car, u);
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) 
+	{
 		// starting the window
 		launch(args);
 	}
 
-	public void start(Stage window) {
+	public void start(Stage window) 
+	{
 		listePlaceHandicape = new ArrayList<int[]>(Arrays.asList(placeHandicape));
 		listePlaceOrdinaire = new ArrayList<int[]>(Arrays.asList(placeOrdinaire));
 		// scene layout
@@ -179,11 +213,11 @@ public class Parking extends Application {
 		// container of the Buttons
 		buttons = new VBox();
 		buttons.setAlignment(Pos.CENTER);
-		buttons.setPadding(new Insets(30, 0, 10, 0));
+		buttons.setPadding(new Insets(20, 0, 20, 0));
 		buttons.getChildren().add(pause);
 		buttons.setStyle("-fx-background-color : #626262;");
 		main.setBottom(buttons);
-		Thread t1 = new Creation();
+		/*Thread t1 = new Creation();
 		Thread t2 = new Creation();
 		Thread t3 = new Creation();
 		Thread t4 = new Creation();
@@ -205,17 +239,19 @@ public class Parking extends Application {
 		t8.start();
 		t9.start();
 		t10.start();
-		t11.start();
+		t11.start();*/
+		for(int i=0; i<15; i++)
+			new Creation().start();
 
 		// button listener
 		pause.setOnAction(e -> {
-			pathTransition.pause();
+			sequentialTransition.pause();
 			buttons.getChildren().clear();
 			buttons.getChildren().add(play);
 		});
 
 		play.setOnAction(e -> {
-			pathTransition.play();
+			sequentialTransition.play();
 			buttons.getChildren().clear();
 			buttons.getChildren().add(pause);
 		});
@@ -230,47 +266,48 @@ public class Parking extends Application {
 		window.show();
 	}
 
-	class Creation extends Thread {
+	class Creation extends Thread 
+	{
 
-		public Creation() {
+		public Creation()
+		{
 
 		}
 
-		public void call(int x) {
+		public void call(int index)
+		{
 			if (new Random().nextInt(7) == 0)
 				carType = "handicapped";
 			else
 				carType = "normal";
 			if (carType.equals("normal")) 
 			{
-				
 				if (semParkN.availablePermits() > 0)
 				{
-					
 					try
 					{
-						semParkN.acquire();
-						if (semEnter.availablePermits() > 0) 
+						if (mutexEnter.availablePermits() > 0) 
 						{
-							semEnter.acquire();
+							mutexEnter.acquire();
+							semParkN.acquire();
 							int r1 = new Random().nextInt(listePlaceOrdinaire.size());
-							garer("normal", listePlaceOrdinaire.get(r1)[0], listePlaceOrdinaire.get(r1)[1], x);
+							garer("normal", listePlaceOrdinaire.get(r1)[0], listePlaceOrdinaire.get(r1)[1], index);
 							listePlaceOrdinaire.remove(r1);
-							Thread.sleep(10000);
+							//Thread.sleep(1000);
+							mutexEnter.release();
 							
-							semEnter.release();
+							//sortie("normal",1000-listePlaceOrdinaire.get(r1)[0], -listePlaceOrdinaire.get(r1)[1] ,index);
 						}
 					} catch (InterruptedException e1) {
 						e1.printStackTrace();
 					} finally {
-						semEnter.release();
+						mutexEnter.release();
 					}
 				} 
 				else
 				{
-					// sortieDirect("normal", x);
+					// sortieDirect("normal", index);
 				}
-
 			} 
 			else
 			{
@@ -279,43 +316,41 @@ public class Parking extends Application {
 					try
 					{
 						semParkH.acquire();
-						if (semEnter.availablePermits() > 0) 
+						if (mutexEnter.availablePermits() > 0) 
 						{
-							semEnter.acquire();
+							mutexEnter.acquire();
 							int r1 = new Random().nextInt(listePlaceHandicape.size());
-							garer("handicapped", listePlaceHandicape.get(r1)[0], listePlaceHandicape.get(r1)[1], x);
+							garer("handicapped", listePlaceHandicape.get(r1)[0], listePlaceHandicape.get(r1)[1], index);
 							listePlaceHandicape.remove(r1);
-							//Thread.sleep(10000);
-							semEnter.release();
+							//Thread.sleep(1000);
+							mutexEnter.release();
 						}
 					} catch (InterruptedException e1) {
 						e1.printStackTrace();
 					} finally {
-						semEnter.release();
+						mutexEnter.release();
 					}
 				} 
 				else
 				{
-					// sortieDirect("normal", x);
+					// sortieDirect("normal", index);
 				}
 			}
 			// add the play button at the end of the transition
 			
-			pathTransition.statusProperty().addListener(e ->
+			sequentialTransition.statusProperty().addListener(e ->
 			{
-
 				if( e.toString().contains("STOPPED"))
 				{
 					buttons.getChildren().clear();
 					buttons.getChildren().add(play); 
 				}
 			 });
-			 
-
 		}
 
 		@Override
-		public void run() {
+		public void run() 
+		{
 			int index;
 			// storing the thread index
 			if (this.getName().length() == 8)
@@ -324,15 +359,12 @@ public class Parking extends Application {
 				index = Integer.parseInt(this.getName().substring(this.getName().length() - 2, this.getName().length()));
 			Platform.runLater(new Runnable()
 			{
-                @Override public void run() 
+                @Override 
+                public void run() 
                 {
-                	
         			call(index);
                 }
             });
-			
 		}
-
 	}
-
 }
