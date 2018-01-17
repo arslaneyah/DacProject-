@@ -26,7 +26,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
-public class Parking extends Application {
+public class TempClass extends Application {
 	// Declaration
 	BorderPane main;
 	Path[] road = new Path[100];
